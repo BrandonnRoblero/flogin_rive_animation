@@ -11,6 +11,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   //CONTROL PARA MOSTRAR/OCULTAR CONTRASEÑA
   bool _obscureText = true;
+
+  //CREAR EL CEREBRO DE LAS ANIMACIONES
+  StateMachineController? _controller;
+  //SMI: State Machine Input
+  SMIBool? _isChecking;
+  SMIBool? _isHandsUp;
+  //SMITrigger? _trigSuccess;
+  //MITrigger? _trigFail;
+
   @override
   Widget build(BuildContext context) {
     //PARA OBTENER EL TAMAÑO DE LA PANTALLA
@@ -24,30 +33,68 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 height: 200,
                 width: Size.width,
-                child: RiveAnimation.asset('assets/corto.riv'),
+                child: RiveAnimation.asset(
+                  'login_bear.riv',
+                  stateMachines: ['Login Machine'],
+                  //al iniciar la animación, se ejecuta el callback onInit
+                  onInit: (artboard) {
+                    _controller = StateMachineController.fromArtboard(
+                      artboard,
+                      'Login Machine',
+                    );
+                    //verificar que todo inicio correctamente
+                    if (_controller == null) return;
+                    //agregar el controlador al tablero de animación
+                    artboard.addController(_controller!);
+                    //VINCULA VARIABLES
+                    _isChecking = _controller!.findSMI('isChecking');
+                    _isHandsUp = _controller!.findSMI('isHandsUp');
+                    //_trigSuccess = _controller!.findSMI('trigSuccess');
+                    //_trigFail = _controller!.findSMI('trigFail');
+                  },
+                ),
               ),
 
               //PARA SEPARAR WIDGETS
-              SizedBox(height: 15),
-              //CAMPO DE TEXTO DE EMAIL
+              SizedBox(height: 20),
+              //campo de texto para email
               TextField(
+                onChanged: (value) {
+                  if (_isHandsUp != null) {
+                    //No se tapa los ojos
+                    _isHandsUp?.change(false);
+                  }
+                  //si isChecking es nulo
+                  if (_isChecking == null) return;
+                  //modo chismoso
+                  _isChecking?.change(true);
+                },
                 //PARA MSTRAR UN TIPO DE TECLADO
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Email',
                   prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
               ),
 
-              SizedBox(height: 15),
-              //CAMPO DE TEXTO DE contraseña
+              SizedBox(height: 10),
+              //campo de texto para contraseña
               TextField(
+                onChanged: (value) {
+                  if (_isHandsUp != null) {
+                    //No se tapa los ojos
+                    _isHandsUp?.change(true);
+                  }
+                  //si isChecking es nulo
+                  if (_isChecking == null) return;
+                  //modo chismoso
+                  _isChecking?.change(true);
+                },
                 //PARA MSTRAR UN TIPO DE TECLADO
                 obscureText: _obscureText,
-                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
@@ -62,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
               ),
