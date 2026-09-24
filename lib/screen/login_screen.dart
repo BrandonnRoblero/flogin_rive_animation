@@ -45,18 +45,18 @@ class _LoginScreenState extends State<LoginScreen> {
   //4.3 validar el email y la contraseña
   bool isValidEmail(String email) {
     // Expresión regular para validar el formato del correo electrónico
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    final re = RegExp(r'^*[^\s@]+@[^\s@]+\.[^\s@]+$');
     return re.hasMatch(email);
   }
 
   bool isValidPassword(String password) {
     // Verifica que la contraseña tenga al menos 6 caracteres
-    final re = RegExp(r'^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[^A-Za-z0-9]).{8,}$');
+    final re = RegExp(r'^(?=.[a-z])(?=.*[A-Z])(?=.\d)(?=.[^A-Za-z0-9]).{8,}$');
     return re.hasMatch(password);
   }
 
   //4.4 accion al botom
-  void _onLogind() {
+  void _onLogin() {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
@@ -112,169 +112,174 @@ class _LoginScreenState extends State<LoginScreen> {
     //PARA OBTENER EL TAMAÑO DE LA PANTALLA
     final Size = MediaQuery.of(context).size;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              SizedBox(
-                height: 200,
-                width: Size.width,
-                child: RiveAnimation.asset(
-                  'assets/corto.riv',
-                  stateMachines: ['Login Machine'],
-                  //al iniciar la animación, se ejecuta el callback onInit
-                  onInit: (artboard) {
-                    _controller = StateMachineController.fromArtboard(
-                      artboard,
-                      'Login Machine',
-                    );
-                    //verificar que todo inicio correctamente
-                    if (_controller == null) return;
-                    //agregar el controlador al tablero de animación
-                    artboard.addController(_controller!);
-                    //vincular las variables de la máquina de estados con las variables de la clase
-                    _isChecking = _controller?.findSMI('isChecking');
-                    _isHandsUp = _controller?.findSMI('isHandsUp');
-                    _trigSuccess = _controller?.findSMI('trigSuccess');
-                    _trigFail = _controller?.findSMI('trigFail');
-                    //vincular la variable de recorrido de la mirada
-                    _numLook = _controller?.findSMI('numLook');
-                  },
-                ),
-              ),
-
-              //PARA SEPARAR WIDGETS
-              SizedBox(height: 20),
-              //campo de texto para email
-              TextField(
-                focusNode: _emailFocusNode,
-                controller: emailController,
-                onChanged: (value) {
-                  if (_isHandsUp != null) {
-                    //No se tapa los ojos
-                    //_isHandsUp?.change(false);
-                  }
-                  //si isChecking es nulo
-                  if (_isChecking == null) return;
-                  //modo chismoso
-                  _isChecking?.change(true);
-                  //implementar el numlook para que la mirada siga el cursor del email
-                  //ajuste de limites de 0 a 100
-                  //80 medida de calibracion
-                  final look = (value.length / 80.0 * 100.0).clamp(0.0, 100.0);
-                  _numLook?.value = look;
-
-                  //3.3 debounce para detener la mirada al dejar de escribir en el email
-                  //cancelar el timer si ya existe uno en curso
-                  _typingDebounce?.cancel();
-                  //crear un nuevo timer
-                  _typingDebounce = Timer(const Duration(seconds: 3), () {
-                    //Si se cierra la pantalla (!mounted es que no esté activa) no se ejecuta el código
-                    if (!mounted) return;
-                    //mirada nuetral
-                    _isChecking?.change(false);
-                  });
-                },
-                //PARA MSTRAR UN TIPO DE TECLADO
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  errorText: emailError,
-                  hintText: 'Email',
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 10),
-              //campo de texto para contraseña
-              TextField(
-                focusNode: _passwordFocusNode,
-                controller: passwordController,
-                onChanged: (value) {
-                  if (_isHandsUp != null) {
-                    //No se tapa los ojos
-                    _isHandsUp?.change(true);
-                  }
-                  //si isChecking es nulo
-                  if (_isChecking == null) return;
-                  //modo chismoso
-                  // _isChecking?.change(true);
-                },
-                //PARA MSTRAR UN TIPO DE TECLADO
-                obscureText: _obscureText,
-                decoration: InputDecoration(
-                  errorText: passwordError,
-                  hintText: 'Password',
-                  prefixIcon: const Icon(Icons.lock),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 200,
+                  width: Size.width,
+                  child: RiveAnimation.asset(
+                    'assets/corto.riv',
+                    stateMachines: ['Login Machine'],
+                    //al iniciar la animación, se ejecuta el callback onInit
+                    onInit: (artboard) {
+                      _controller = StateMachineController.fromArtboard(
+                        artboard,
+                        'Login Machine',
+                      );
+                      //verificar que todo inicio correctamente
+                      if (_controller == null) return;
+                      //agregar el controlador al tablero de animación
+                      artboard.addController(_controller!);
+                      //vincular las variables de la máquina de estados con las variables de la clase
+                      _isChecking = _controller?.findSMI('isChecking');
+                      _isHandsUp = _controller?.findSMI('isHandsUp');
+                      _trigSuccess = _controller?.findSMI('trigSuccess');
+                      _trigFail = _controller?.findSMI('trigFail');
+                      //vincular la variable de recorrido de la mirada
+                      _numLook = _controller?.findSMI('numLook');
                     },
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+                ),
+
+                //PARA SEPARAR WIDGETS
+                SizedBox(height: 20),
+                //campo de texto para email
+                TextField(
+                  focusNode: _emailFocusNode,
+                  controller: emailController,
+                  onChanged: (value) {
+                    if (_isHandsUp != null) {
+                      //No se tapa los ojos
+                      //_isHandsUp?.change(false);
+                    }
+                    //si isChecking es nulo
+                    if (_isChecking == null) return;
+                    //modo chismoso
+                    _isChecking?.change(true);
+                    //implementar el numlook para que la mirada siga el cursor del email
+                    //ajuste de limites de 0 a 100
+                    //80 medida de calibracion
+                    final look = (value.length / 80.0 * 100.0).clamp(
+                      0.0,
+                      100.0,
+                    );
+                    _numLook?.value = look;
+
+                    //3.3 debounce para detener la mirada al dejar de escribir en el email
+                    //cancelar el timer si ya existe uno en curso
+                    _typingDebounce?.cancel();
+                    //crear un nuevo timer
+                    _typingDebounce = Timer(const Duration(seconds: 3), () {
+                      //Si se cierra la pantalla (!mounted es que no esté activa) no se ejecuta el código
+                      if (!mounted) return;
+                      //mirada nuetral
+                      _isChecking?.change(false);
+                    });
+                  },
+                  //PARA MSTRAR UN TIPO DE TECLADO
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    errorText: emailError,
+                    hintText: 'Email',
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                 ),
-              ),
 
-              SizedBox(height: 10),
-              //texto de "olvidaste tu contraseña"
-              SizedBox(
-                width: Size.width,
-                child: const Text(
-                  'Forgot your password?',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(decoration: TextDecoration.underline),
+                SizedBox(height: 10),
+                //campo de texto para contraseña
+                TextField(
+                  focusNode: _passwordFocusNode,
+                  controller: passwordController,
+                  onChanged: (value) {
+                    if (_isHandsUp != null) {
+                      //No se tapa los ojos
+                      _isHandsUp?.change(true);
+                    }
+                    //si isChecking es nulo
+                    if (_isChecking == null) return;
+                    //modo chismoso
+                    // _isChecking?.change(true);
+                  },
+                  //PARA MSTRAR UN TIPO DE TECLADO
+                  obscureText: _obscureText,
+                  decoration: InputDecoration(
+                    errorText: passwordError,
+                    hintText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureText ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: 10),
-              MaterialButton(
-                minWidth: Size.width,
-                height: 50,
-                color: Colors.deepPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                onPressed: _onLogind,
-                child: const Text(
-                  'Login',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
-              const SizedBox(height: 20),
-              //No tienes cuenta??
 
-              SizedBox(
-                width: Size.width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have a account"),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "Register",
-                        style: TextStyle(
-                          color: Colors.black,
-                          //Subrayado
-                          decoration: TextDecoration.underline,
-                          //Negritas
-                          fontWeight: FontWeight.bold,
+                SizedBox(height: 10),
+                //texto de "olvidaste tu contraseña"
+                SizedBox(
+                  width: Size.width,
+                  child: const Text(
+                    'Forgot your password?',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(decoration: TextDecoration.underline),
+                  ),
+                ),
+                SizedBox(height: 10),
+                MaterialButton(
+                  minWidth: Size.width,
+                  height: 50,
+                  color: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  onPressed: _onLogin,
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                //No tienes cuenta??
+
+                SizedBox(
+                  width: Size.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Don't have a account"),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          "Register",
+                          style: TextStyle(
+                            color: Colors.black,
+                            //Subrayado
+                            decoration: TextDecoration.underline,
+                            //Negritas
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
