@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     //context: te dice donde estas situado
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       //estilo Android
       title: 'Flutter Demo',
       theme: ThemeData(

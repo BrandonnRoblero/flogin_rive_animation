@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rive/rive.dart';
 
 import 'dart:async'; //3.1 importar la libreria para usar el timer
@@ -33,6 +34,60 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
+  //4.1 controllers para manipular el texto escrito por usuario
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  //4.2 Errores para mostrar en la interfaz de usuario
+  String? emailError;
+  String? passwordError;
+
+  //4.3 validar el email y la contraseña
+  bool isValidEmail(String email) {
+    // Expresión regular para validar el formato del correo electrónico
+    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return re.hasMatch(email);
+  }
+
+  bool isValidPassword(String password) {
+    // Verifica que la contraseña tenga al menos 6 caracteres
+    final re = RegExp(r'^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[^A-Za-z0-9]).{8,}$');
+    return re.hasMatch(password);
+  }
+
+  //4.4 accion al botom
+  void _onLogind() {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    //recalcular los errores cada vez que se presiona el botón de login
+
+    final eError = isValidEmail(email) ? null : 'Invalid email format';
+    final pError = isValidPassword(password) ? null : 'Invalid password format';
+
+    //4.5 avisar si hay errores
+    setState(() {
+      emailError = eError;
+      passwordError = pError;
+    });
+
+    //4.6 cerrar el tecaldo y bajar las manos
+    FocusScope.of(context).unfocus();
+    _typingDebounce?.cancel();
+    _isChecking?.change(false);
+    _isHandsUp?.change(false);
+    _numLook?.value = 50; //mirada neutral
+
+    //4.7 activar triggers
+
+    if (eError == null && pError == null) {
+      _trigSuccess?.fire();
+    } else {
+      _trigFail?.fire();
+    }
+  }
+
+  //crear los listeners para los focusNode y el timer para detener la mirada al dejar de escribir en el email
   @override
   void initState() {
     super.initState();
@@ -66,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 200,
                 width: Size.width,
                 child: RiveAnimation.asset(
-                  'corto.riv',
+                  'assets/corto.riv',
                   stateMachines: ['Login Machine'],
                   //al iniciar la animación, se ejecuta el callback onInit
                   onInit: (artboard) {
@@ -94,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
               //campo de texto para email
               TextField(
                 focusNode: _emailFocusNode,
+                controller: emailController,
                 onChanged: (value) {
                   if (_isHandsUp != null) {
                     //No se tapa los ojos
@@ -123,6 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 //PARA MSTRAR UN TIPO DE TECLADO
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
+                  errorText: emailError,
                   hintText: 'Email',
                   prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(
@@ -135,6 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
               //campo de texto para contraseña
               TextField(
                 focusNode: _passwordFocusNode,
+                controller: passwordController,
                 onChanged: (value) {
                   if (_isHandsUp != null) {
                     //No se tapa los ojos
@@ -148,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 //PARA MSTRAR UN TIPO DE TECLADO
                 obscureText: _obscureText,
                 decoration: InputDecoration(
+                  errorText: passwordError,
                   hintText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -165,6 +224,56 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+
+              SizedBox(height: 10),
+              //texto de "olvidaste tu contraseña"
+              SizedBox(
+                width: Size.width,
+                child: const Text(
+                  'Forgot your password?',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
+              SizedBox(height: 10),
+              MaterialButton(
+                minWidth: Size.width,
+                height: 50,
+                color: Colors.deepPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                onPressed: _onLogind,
+                child: const Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 20),
+              //No tienes cuenta??
+
+              SizedBox(
+                width: Size.width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have a account"),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        "Register",
+                        style: TextStyle(
+                          color: Colors.black,
+                          //Subrayado
+                          decoration: TextDecoration.underline,
+                          //Negritas
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -179,6 +288,10 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordFocusNode.dispose();
     //3.4 cancelar el timer si existe
     _typingDebounce?.cancel();
+
+    //4.11 Liberar controllers
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 }
